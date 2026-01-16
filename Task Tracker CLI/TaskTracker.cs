@@ -55,6 +55,9 @@ public static class TaskTracker
       case "done":
         return Status.Done;
       default:
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"no such category: {status}");
+        Console.ResetColor();
         return Status.Unknown;
     }
   }
