@@ -79,6 +79,12 @@ public static class TaskTracker
     if (tasks == null) return;
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
+
+    if (taskToUpdate?.Status == Status.InProgress)
+    {
+      Console.WriteLine("already in progress");
+      return;
+    }
     
     if (taskToUpdate == null)
     {
@@ -96,7 +102,30 @@ public static class TaskTracker
 
   public static void MarkDone(int id)
   {
-    Console.WriteLine($"now done: {id}");
+    var tasks = GetTasks();
+    if (tasks == null) return;
+    
+    var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
+    if (taskToUpdate?.Status == Status.Done)
+    {
+      Console.Write("already in done, ");
+      Console.WriteLine("congrats");
+      Console.ResetColor();
+      return;
+    }
+    
+    if (taskToUpdate == null)
+    {
+      Console.Write($"there is no task with id ");
+      Console.ForegroundColor = ConsoleColor.Red;
+      Console.WriteLine(id);
+      return;
+    }
+    
+    taskToUpdate?.Status = Status.Done;
+    
+    UpdateFile(tasks);
+    Errors.PrintTaskInfo(taskToUpdate!);
   }
 
   public static void List(string[] arguments)
@@ -146,7 +175,7 @@ public static class TaskTracker
     var options = new JsonSerializerOptions { WriteIndented = true };
     File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
   }
-
+  
   private static List<Task>? GetTasks() => JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
   
 }
