@@ -4,11 +4,13 @@ namespace Task_Tracker_CLI;
 
 public static class TaskTracker
 {
-  private static readonly string PathToFile = Path.GetFullPath(Path.Join(Directory.GetCurrentDirectory(), "tasks.json"));
+  private static readonly string
+    PathToFile = Path.Join(Directory.GetCurrentDirectory(), "tasks.json");
+  
+  private static JsonSerializerOptions _options = new JsonSerializerOptions { WriteIndented = true };
+
   public static void AddTask(string description)
   {
-    
-
     var task = new Task()
     {
       Id = "1",
@@ -17,12 +19,10 @@ public static class TaskTracker
       Status = Status.Todo,
     };
 
-    var options = new JsonSerializerOptions { WriteIndented = true };
-
     if (!File.Exists(PathToFile))
     {
       List<Task> tasks = [task];
-      File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
+      File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, _options));
       Errors.PrintAddInfo(task.Id, description);
       return;
     }
@@ -43,7 +43,7 @@ public static class TaskTracker
     task.Id = newId;
     readTasks.Add(task);
 
-    File.WriteAllText(PathToFile, JsonSerializer.Serialize(readTasks, options));
+    File.WriteAllText(PathToFile, JsonSerializer.Serialize(readTasks, _options));
 
     Errors.PrintAddInfo(newId, description);
   }
@@ -55,7 +55,22 @@ public static class TaskTracker
 
   public static void DeleteTask(int id)
   {
-    Console.WriteLine($"deleting task: {id}");
+    var tasks = JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
+    var taskToDelete = tasks?.Find(task => task.Id == id.ToString());
+    if (taskToDelete == null)
+    {
+      Console.Write($"there is no task with id ");
+      Console.ForegroundColor = ConsoleColor.Red;
+      Console.WriteLine(id);
+      return;
+    }
+    tasks?.Remove(taskToDelete);
+    
+    File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, _options));
+
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.Write("deleted task: ");
+    Console.WriteLine(taskToDelete.Id);
   }
 
   public static void MarkInProgress(int id)
@@ -79,7 +94,7 @@ public static class TaskTracker
 
     var tasks = JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
     if (tasks == null) return;
-    
+
     foreach (var task in tasks)
     {
       Console.Write("ID: ");
