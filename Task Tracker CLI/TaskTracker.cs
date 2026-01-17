@@ -6,8 +6,6 @@ public static class TaskTracker
 {
   private static readonly string
     PathToFile = Path.Join(Directory.GetCurrentDirectory(), "tasks.json");
-  
-  // private static JsonSerializerOptions _options = new JsonSerializerOptions { WriteIndented = true };
 
   public static void AddTask(string description)
   {
@@ -28,8 +26,8 @@ public static class TaskTracker
       return;
     }
 
-    var readFile = File.ReadAllText(PathToFile);
-    var readTasks = JsonSerializer.Deserialize<List<Task>>(readFile);
+
+    var readTasks = GetTasks();
     if (readTasks == null) return;
 
     List<int> ids = [];
@@ -56,7 +54,7 @@ public static class TaskTracker
 
   public static void DeleteTask(int id)
   {
-    var tasks = JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
+    var tasks = GetTasks();
     var taskToDelete = tasks?.Find(task => task.Id == id.ToString());
     if (taskToDelete == null)
     {
@@ -70,7 +68,7 @@ public static class TaskTracker
     if (tasks != null) UpdateFile(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
-    Console.Write("deleted task: ");
+    Console.Write("you removed task: ");
     Console.WriteLine(taskToDelete.Id);
   }
 
@@ -93,7 +91,7 @@ public static class TaskTracker
       return;
     }
 
-    var tasks = JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
+    var tasks = GetTasks();
     if (tasks == null) return;
 
     foreach (var task in tasks)
@@ -139,5 +137,10 @@ public static class TaskTracker
   {
     var options = new JsonSerializerOptions { WriteIndented = true };
     File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
+  }
+
+  private static List<Task>? GetTasks()
+  {
+    return JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
   }
 }
