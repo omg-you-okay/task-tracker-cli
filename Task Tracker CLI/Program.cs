@@ -13,7 +13,6 @@ var command = arguments[1];
 // TODO: Handle errors when no file exists
 // TODO: identify more errors and edge cases 
 // TODO: update;
-// TODO: list done | todo | in-progress 
 
 switch (command)
 {

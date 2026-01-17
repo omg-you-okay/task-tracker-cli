@@ -94,10 +94,10 @@ public static class TaskTracker
       return;
     }
 
-    taskToUpdate?.Status = Status.InProgress;
+    taskToUpdate.Status = Status.InProgress;
 
     UpdateFile(tasks);
-    Errors.PrintTaskInfo(taskToUpdate!);
+    Errors.PrintTaskInfo(taskToUpdate);
   }
 
   public static void MarkDone(int id)
@@ -122,24 +122,24 @@ public static class TaskTracker
       return;
     }
     
-    taskToUpdate?.Status = Status.Done;
+    taskToUpdate.Status = Status.Done;
     
     UpdateFile(tasks);
-    Errors.PrintTaskInfo(taskToUpdate!);
+    Errors.PrintTaskInfo(taskToUpdate);
   }
 
   public static void List(string[] arguments)
   {
-    if (arguments.Length > 2)
-    {
-      var status = StatusToEnumMapper(arguments[2]);
-      ListByStatus(status);
-      return;
-    }
-
     var tasks = GetTasks();
     if (tasks == null) return;
 
+    if (arguments.Length > 2)
+    {
+      var status = StatusToEnumMapper(arguments[2]);
+      ListByStatus(status, tasks);
+      return;
+    }
+    
     foreach (var task in tasks)
     {
       Errors.PrintTaskInfo(task);
@@ -147,9 +147,36 @@ public static class TaskTracker
     }
   }
 
-  private static void ListByStatus(Status status)
+  private static void ListByStatus(Status status, List<Task> tasks)
   {
-    Console.WriteLine($"listing: {status}");
+    List<Task> filteredTasks = [];
+    switch (status)
+    {
+      case Status.InProgress:
+        filteredTasks = tasks.FindAll(task => task.Status == Status.InProgress);
+        break;
+      case Status.Done:
+        filteredTasks = tasks.FindAll(task => task.Status == Status.Done);
+        break;
+      case Status.Todo:
+        filteredTasks = tasks.FindAll(task => task.Status == Status.Todo);
+        break;
+      case Status.Unknown:
+        Console.WriteLine("incorrect status");
+        return;
+    }
+
+    if (filteredTasks.Count == 0)
+    {
+      Console.WriteLine($"you don't have anything {status}");
+      return;
+    }
+
+    foreach (var task in filteredTasks)
+    {
+      Errors.PrintTaskInfo(task);
+      Console.WriteLine();
+    }
   }
 
   private static Status StatusToEnumMapper(string status)
