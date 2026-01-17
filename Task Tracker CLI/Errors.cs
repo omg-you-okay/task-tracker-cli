@@ -66,4 +66,18 @@ public static class Errors
     Console.ResetColor();
     Console.WriteLine(text);
   }
+
+  public static void PrintTaskInfo(Task task)
+  {
+    Console.Write("ID: ");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine(task?.Id);
+    Console.ResetColor();
+    Console.Write($"STATUS: ");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine(task?.Status);
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine(task?.Description);
+    Console.ResetColor();
+  }
 }

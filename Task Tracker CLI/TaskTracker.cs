@@ -21,7 +21,7 @@ public static class TaskTracker
     {
       List<Task> tasks = [task];
       UpdateFile(tasks);
-      
+
       Errors.PrintAddInfo(task.Id, description);
       return;
     }
@@ -41,7 +41,7 @@ public static class TaskTracker
     var newId = (ids.LastOrDefault() + 1).ToString();
     task.Id = newId;
     readTasks.Add(task);
-    
+
     UpdateFile(readTasks);
 
     Errors.PrintAddInfo(newId, description);
@@ -63,6 +63,7 @@ public static class TaskTracker
       Console.WriteLine(id);
       return;
     }
+
     tasks?.Remove(taskToDelete);
 
     if (tasks != null) UpdateFile(tasks);
@@ -74,7 +75,23 @@ public static class TaskTracker
 
   public static void MarkInProgress(int id)
   {
-    Console.WriteLine($"now in-progress: {id}");
+    var tasks = GetTasks();
+    if (tasks == null) return;
+
+    var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
+    
+    if (taskToUpdate == null)
+    {
+      Console.Write($"there is no task with id ");
+      Console.ForegroundColor = ConsoleColor.Red;
+      Console.WriteLine(id);
+      return;
+    }
+
+    taskToUpdate?.Status = Status.InProgress;
+
+    UpdateFile(tasks);
+    Errors.PrintTaskInfo(taskToUpdate!);
   }
 
   public static void MarkDone(int id)
@@ -96,16 +113,7 @@ public static class TaskTracker
 
     foreach (var task in tasks)
     {
-      Console.Write("ID: ");
-      Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.WriteLine(task.Id);
-      Console.ResetColor();
-      Console.Write($"STATUS: ");
-      Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.WriteLine(task.Status);
-      Console.ForegroundColor = ConsoleColor.Green;
-      Console.WriteLine(task.Description);
-      Console.ResetColor();
+      Errors.PrintTaskInfo(task);
       Console.WriteLine();
     }
   }
@@ -139,8 +147,6 @@ public static class TaskTracker
     File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
   }
 
-  private static List<Task>? GetTasks()
-  {
-    return JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
-  }
+  private static List<Task>? GetTasks() => JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
+  
 }
