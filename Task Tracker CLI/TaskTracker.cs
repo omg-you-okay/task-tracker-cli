@@ -4,9 +4,10 @@ namespace Task_Tracker_CLI;
 
 public static class TaskTracker
 {
+  private static readonly string PathToFile = Path.GetFullPath(Path.Join(Directory.GetCurrentDirectory(), "tasks.json"));
   public static void AddTask(string description)
   {
-    var pathToFile = Path.GetFullPath(Path.Join(Directory.GetCurrentDirectory(), "temp.txt"));
+    
 
     var task = new Task()
     {
@@ -18,15 +19,15 @@ public static class TaskTracker
 
     var options = new JsonSerializerOptions { WriteIndented = true };
 
-    if (!File.Exists(pathToFile))
+    if (!File.Exists(PathToFile))
     {
       List<Task> tasks = [task];
-      File.WriteAllText(pathToFile, JsonSerializer.Serialize(tasks, options));
+      File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
       Errors.PrintAddInfo(task.Id, description);
       return;
     }
 
-    var readFile = File.ReadAllText(pathToFile);
+    var readFile = File.ReadAllText(PathToFile);
     var readTasks = JsonSerializer.Deserialize<List<Task>>(readFile);
     if (readTasks == null) return;
 
@@ -42,7 +43,7 @@ public static class TaskTracker
     task.Id = newId;
     readTasks.Add(task);
 
-    File.WriteAllText(pathToFile, JsonSerializer.Serialize(readTasks, options));
+    File.WriteAllText(PathToFile, JsonSerializer.Serialize(readTasks, options));
 
     Errors.PrintAddInfo(newId, description);
   }
@@ -76,7 +77,23 @@ public static class TaskTracker
       return;
     }
 
-    Console.WriteLine("listing all items");
+    var tasks = JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
+    if (tasks == null) return;
+    
+    foreach (var task in tasks)
+    {
+      Console.Write("ID: ");
+      Console.ForegroundColor = ConsoleColor.Cyan;
+      Console.WriteLine(task.Id);
+      Console.ResetColor();
+      Console.Write($"STATUS: ");
+      Console.ForegroundColor = ConsoleColor.Cyan;
+      Console.WriteLine(task.Status);
+      Console.ForegroundColor = ConsoleColor.Green;
+      Console.WriteLine(task.Description);
+      Console.ResetColor();
+      Console.WriteLine();
+    }
   }
 
   private static void ListByStatus(Status status)
