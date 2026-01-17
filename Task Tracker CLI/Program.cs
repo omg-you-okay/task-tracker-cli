@@ -1,6 +1,6 @@
 using Task_Tracker_CLI;
 
-string[] arguments = Environment.GetCommandLineArgs();
+var arguments = Environment.GetCommandLineArgs();
 
 if (arguments.Length < 2)
 {
@@ -22,17 +22,17 @@ switch (command)
     break;
 
   case "update":
-    if (arguments.Length < 3)
+    switch (arguments.Length)
     {
-      Errors.NoId();
-      return;
+      case < 3:
+        Errors.NoId();
+        return;
+      case < 4:
+        Errors.CustomError("text is missing");
+        return;
     }
-    if (arguments.Length < 4)
-    {
-      Errors.CustomError("text is missing");
-      return;
-    }
-    TaskTracker.UpdateTask(Int32.Parse(arguments[2]), arguments[3]);
+
+    TaskTracker.UpdateTask(int.Parse(arguments[2]), arguments[3]);
     break;
 
   case "delete":
@@ -50,7 +50,7 @@ switch (command)
       Errors.NoId();
       return;
     }
-    TaskTracker.MarkInProgress(Int32.Parse(arguments[2]));
+    TaskTracker.MarkInProgress(int.Parse(arguments[2]));
     break;
 
   case "mark-done":
@@ -59,7 +59,7 @@ switch (command)
       Errors.NoId();
       return;
     }
-    TaskTracker.MarkDone(Int32.Parse(arguments[2]));
+    TaskTracker.MarkDone(int.Parse(arguments[2]));
     break;
 
   case "list":

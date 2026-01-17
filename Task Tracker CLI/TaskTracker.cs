@@ -16,10 +16,13 @@ public static class TaskTracker
       Status = Status.Todo,
     };
 
+    var options = new JsonSerializerOptions { WriteIndented = true };
+
     if (!File.Exists(pathToFile))
     {
       List<Task> tasks = [task];
-      File.WriteAllText(pathToFile, JsonSerializer.Serialize(tasks));
+      File.WriteAllText(pathToFile, JsonSerializer.Serialize(tasks, options));
+      Errors.PrintAddInfo(task.Id, description);
       return;
     }
 
@@ -33,17 +36,15 @@ public static class TaskTracker
     {
       ids.Add(int.Parse(readTask.Id));
     }
+
     ids.Sort();
     var newId = (ids.LastOrDefault() + 1).ToString();
     task.Id = newId;
     readTasks.Add(task);
 
-    File.WriteAllText(pathToFile, JsonSerializer.Serialize(readTasks));
-    
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.Write($"Id: {newId}; Added: ");
-    Console.ResetColor();
-    Console.WriteLine(description);
+    File.WriteAllText(pathToFile, JsonSerializer.Serialize(readTasks, options));
+
+    Errors.PrintAddInfo(newId, description);
   }
 
   public static void UpdateTask(int id, string description)

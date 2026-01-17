@@ -58,4 +58,12 @@ public static class Errors
     Console.WriteLine("id is missing");
     Console.ResetColor();
   }
+
+  public static void PrintAddInfo(string id, string text)
+  {
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.Write($"Id: {id}; Added: ");
+    Console.ResetColor();
+    Console.WriteLine(text);
+  }
 }
