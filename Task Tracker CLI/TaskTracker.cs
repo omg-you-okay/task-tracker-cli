@@ -49,7 +49,25 @@ public static class TaskTracker
 
   public static void UpdateTask(int id, string description)
   {
-    Console.WriteLine($"updating task: {id} with: {description}");
+    var tasks = GetTasks();
+    if (tasks == null) return;
+
+    var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
+    if (taskToUpdate == null)
+    {
+      Console.Write($"there is no task with id ");
+      Console.ForegroundColor = ConsoleColor.Red;
+      Console.WriteLine(id);
+      return;
+    }
+
+    taskToUpdate.Description = description;
+    UpdateFile(tasks);
+    
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("updated");
+    Console.ResetColor();
+    Errors.PrintTaskInfo(taskToUpdate);
   }
 
   public static void DeleteTask(int id)
