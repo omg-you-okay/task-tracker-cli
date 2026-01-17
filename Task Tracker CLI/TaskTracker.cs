@@ -7,7 +7,7 @@ public static class TaskTracker
   private static readonly string
     PathToFile = Path.Join(Directory.GetCurrentDirectory(), "tasks.json");
   
-  private static JsonSerializerOptions _options = new JsonSerializerOptions { WriteIndented = true };
+  // private static JsonSerializerOptions _options = new JsonSerializerOptions { WriteIndented = true };
 
   public static void AddTask(string description)
   {
@@ -22,7 +22,8 @@ public static class TaskTracker
     if (!File.Exists(PathToFile))
     {
       List<Task> tasks = [task];
-      File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, _options));
+      UpdateFile(tasks);
+      
       Errors.PrintAddInfo(task.Id, description);
       return;
     }
@@ -42,8 +43,8 @@ public static class TaskTracker
     var newId = (ids.LastOrDefault() + 1).ToString();
     task.Id = newId;
     readTasks.Add(task);
-
-    File.WriteAllText(PathToFile, JsonSerializer.Serialize(readTasks, _options));
+    
+    UpdateFile(readTasks);
 
     Errors.PrintAddInfo(newId, description);
   }
@@ -65,8 +66,8 @@ public static class TaskTracker
       return;
     }
     tasks?.Remove(taskToDelete);
-    
-    File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, _options));
+
+    if (tasks != null) UpdateFile(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
     Console.Write("deleted task: ");
@@ -132,5 +133,11 @@ public static class TaskTracker
         Console.ResetColor();
         return Status.Unknown;
     }
+  }
+
+  private static void UpdateFile(List<Task> tasks)
+  {
+    var options = new JsonSerializerOptions { WriteIndented = true };
+    File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
   }
 }
