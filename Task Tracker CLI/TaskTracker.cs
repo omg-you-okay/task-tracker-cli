@@ -62,6 +62,7 @@ public static class TaskTracker
     }
 
     taskToUpdate.Description = description;
+    taskToUpdate.UpdatedAt = DateTime.Now;
     UpdateFile(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
@@ -113,6 +114,7 @@ public static class TaskTracker
     }
 
     taskToUpdate.Status = Status.InProgress;
+    taskToUpdate.UpdatedAt = DateTime.Now;
 
     UpdateFile(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
@@ -141,6 +143,7 @@ public static class TaskTracker
     }
 
     taskToUpdate.Status = Status.Done;
+    taskToUpdate.UpdatedAt = DateTime.Now;
 
     UpdateFile(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
