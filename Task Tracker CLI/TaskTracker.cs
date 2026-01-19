@@ -4,7 +4,7 @@ namespace Task_Tracker_CLI;
 
 public static class TaskTracker
 {
-  private static readonly string
+  public static readonly string
     PathToFile = Path.Join(Directory.GetCurrentDirectory(), "tasks.json");
 
   public static void AddTask(string description)
@@ -63,7 +63,7 @@ public static class TaskTracker
 
     taskToUpdate.Description = description;
     UpdateFile(tasks);
-    
+
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("updated");
     Console.ResetColor();
@@ -103,7 +103,7 @@ public static class TaskTracker
       Console.WriteLine("already in progress");
       return;
     }
-    
+
     if (taskToUpdate == null)
     {
       Console.Write($"there is no task with id ");
@@ -122,7 +122,7 @@ public static class TaskTracker
   {
     var tasks = GetTasks();
     if (tasks == null) return;
-    
+
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
     if (taskToUpdate?.Status == Status.Done)
     {
@@ -131,7 +131,7 @@ public static class TaskTracker
       Console.ResetColor();
       return;
     }
-    
+
     if (taskToUpdate == null)
     {
       Console.Write($"there is no task with id ");
@@ -139,9 +139,9 @@ public static class TaskTracker
       Console.WriteLine(id);
       return;
     }
-    
+
     taskToUpdate.Status = Status.Done;
-    
+
     UpdateFile(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
   }
@@ -157,7 +157,7 @@ public static class TaskTracker
       ListByStatus(status, tasks);
       return;
     }
-    
+
     foreach (var task in tasks)
     {
       Errors.PrintTaskInfo(task);
@@ -220,7 +220,6 @@ public static class TaskTracker
     var options = new JsonSerializerOptions { WriteIndented = true };
     File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
   }
-  
+
   private static List<Task>? GetTasks() => JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
-  
 }

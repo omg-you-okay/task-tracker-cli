@@ -10,9 +10,6 @@ if (arguments.Length < 2)
 
 var command = arguments[1];
 
-// TODO: Handle errors when no file exists
-// TODO: identify more errors and edge cases 
-
 switch (command)
 {
   case "add":
@@ -26,6 +23,13 @@ switch (command)
     break;
 
   case "update":
+
+    if (!File.Exists(TaskTracker.PathToFile))
+    {
+      Console.WriteLine("Add at leat 1 task");
+      return;
+    }
+
     switch (arguments.Length)
     {
       case < 3:
@@ -40,6 +44,13 @@ switch (command)
     break;
 
   case "delete":
+
+    if (!File.Exists(TaskTracker.PathToFile))
+    {
+      Console.WriteLine("Add at leat 1 task");
+      return;
+    }
+
     if (arguments.Length < 3)
     {
       Errors.NoId();
@@ -50,6 +61,13 @@ switch (command)
     break;
 
   case "mark-in-progress":
+
+    if (!File.Exists(TaskTracker.PathToFile))
+    {
+      Console.WriteLine("Add at leat 1 task");
+      return;
+    }
+
     if (arguments.Length < 3)
     {
       Errors.NoId();
@@ -60,6 +78,13 @@ switch (command)
     break;
 
   case "mark-done":
+
+    if (!File.Exists(TaskTracker.PathToFile))
+    {
+      Console.WriteLine("Add at leat 1 task");
+      return;
+    }
+
     if (arguments.Length < 3)
     {
       Errors.NoId();
@@ -70,6 +95,13 @@ switch (command)
     break;
 
   case "list":
+
+    if (!File.Exists(TaskTracker.PathToFile))
+    {
+      Console.WriteLine("Add at leat 1 task");
+      return;
+    }
+
     TaskTracker.List(arguments);
     break;
 
