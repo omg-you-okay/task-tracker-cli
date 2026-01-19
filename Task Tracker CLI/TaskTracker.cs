@@ -9,6 +9,13 @@ public static class TaskTracker
 
   public static void AddTask(string description)
   {
+
+    if (description.IsWhiteSpace())
+    {
+      Console.WriteLine("task description can't be empty");
+      return;
+    }
+    
     var task = new Task()
     {
       Id = "1",
