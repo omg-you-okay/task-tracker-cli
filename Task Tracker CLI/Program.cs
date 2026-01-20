@@ -1,4 +1,5 @@
 using Task_Tracker_CLI;
+using Task_Tracker_CLI.Resources;
 
 var arguments = Environment.GetCommandLineArgs();
 
@@ -10,6 +11,10 @@ if (arguments.Length < 2)
 
 var command = arguments[1];
 
+var taskRepository = new TaskRepositoryResource(Path.Join(Directory.GetCurrentDirectory(), "tasks.json"));
+var taskTracker = new TaskTracker(taskRepository);
+
+
 switch (command)
 {
   case "add":
@@ -19,12 +24,12 @@ switch (command)
       return;
     }
 
-    TaskTracker.AddTask(arguments[2]);
+    taskTracker.AddTask(arguments[2]);
     break;
 
   case "update":
 
-    if (!File.Exists(TaskTracker.PathToFile))
+    if (!taskTracker.HasTasks())
     {
       Console.WriteLine("Add at leat 1 task");
       return;
@@ -40,12 +45,12 @@ switch (command)
         return;
     }
 
-    TaskTracker.UpdateTask(int.Parse(arguments[2]), arguments[3]);
+    taskTracker.UpdateTask(int.Parse(arguments[2]), arguments[3]);
     break;
 
   case "delete":
 
-    if (!File.Exists(TaskTracker.PathToFile))
+    if (!taskTracker.HasTasks())
     {
       Console.WriteLine("Add at leat 1 task");
       return;
@@ -57,12 +62,12 @@ switch (command)
       return;
     }
 
-    TaskTracker.DeleteTask(Int32.Parse(arguments[2]));
+    taskTracker.DeleteTask(Int32.Parse(arguments[2]));
     break;
 
   case "mark-in-progress":
 
-    if (!File.Exists(TaskTracker.PathToFile))
+    if (!taskTracker.HasTasks())
     {
       Console.WriteLine("Add at leat 1 task");
       return;
@@ -74,12 +79,12 @@ switch (command)
       return;
     }
 
-    TaskTracker.MarkInProgress(int.Parse(arguments[2]));
+    taskTracker.MarkInProgress(int.Parse(arguments[2]));
     break;
 
   case "mark-done":
 
-    if (!File.Exists(TaskTracker.PathToFile))
+    if (!taskTracker.HasTasks())
     {
       Console.WriteLine("Add at leat 1 task");
       return;
@@ -91,18 +96,19 @@ switch (command)
       return;
     }
 
-    TaskTracker.MarkDone(int.Parse(arguments[2]));
+    taskTracker.MarkDone(int.Parse(arguments[2]));
     break;
 
   case "list":
 
-    if (!File.Exists(TaskTracker.PathToFile))
+    if (!taskTracker.HasTasks())
     {
       Console.WriteLine("Add at leat 1 task");
       return;
     }
 
-    TaskTracker.List(arguments);
+    var statusFilter = arguments.Length > 2 ? arguments[2] : null;
+    taskTracker.List(statusFilter);
     break;
 
   default:

@@ -1,21 +1,26 @@
-using System.Text.Json;
+using Task_Tracker_CLI.Resources;
 
 namespace Task_Tracker_CLI;
 
-public static class TaskTracker
+public class TaskTracker
 {
-  public static readonly string
-    PathToFile = Path.Join(Directory.GetCurrentDirectory(), "tasks.json");
+  private ITaskRepositoryResource _taskRepositoryResource;
 
-  public static void AddTask(string description)
+  public TaskTracker(ITaskRepositoryResource taskRepositoryResource)
   {
+    this._taskRepositoryResource = taskRepositoryResource;
+  }
 
+  public bool HasTasks() => _taskRepositoryResource.StorageExists();
+
+  public void AddTask(string description)
+  {
     if (description.IsWhiteSpace())
     {
       Console.WriteLine("task description can't be empty");
       return;
     }
-    
+
     var task = new Task()
     {
       Id = "1",
@@ -24,18 +29,17 @@ public static class TaskTracker
       Status = Status.Todo,
     };
 
-    if (!File.Exists(PathToFile))
+    if (!_taskRepositoryResource.StorageExists())
     {
       List<Task> tasks = [task];
-      UpdateFile(tasks);
+      _taskRepositoryResource.SaveAll(tasks);
 
       Errors.PrintAddInfo(task.Id, description);
       return;
     }
 
 
-    var readTasks = GetTasks();
-    if (readTasks == null) return;
+    var readTasks = _taskRepositoryResource.GetAllTasks();
 
     List<int> ids = [];
 
@@ -49,15 +53,14 @@ public static class TaskTracker
     task.Id = newId;
     readTasks.Add(task);
 
-    UpdateFile(readTasks);
+    _taskRepositoryResource.SaveAll(readTasks);
 
     Errors.PrintAddInfo(newId, description);
   }
 
-  public static void UpdateTask(int id, string description)
+  public void UpdateTask(int id, string description)
   {
-    var tasks = GetTasks();
-    if (tasks == null) return;
+    var tasks = _taskRepositoryResource.GetAllTasks();
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
     if (taskToUpdate == null)
@@ -70,7 +73,7 @@ public static class TaskTracker
 
     taskToUpdate.Description = description;
     taskToUpdate.UpdatedAt = DateTime.Now;
-    UpdateFile(tasks);
+    _taskRepositoryResource.SaveAll(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("updated");
@@ -78,9 +81,9 @@ public static class TaskTracker
     Errors.PrintTaskInfo(taskToUpdate);
   }
 
-  public static void DeleteTask(int id)
+  public void DeleteTask(int id)
   {
-    var tasks = GetTasks();
+    var tasks = _taskRepositoryResource.GetAllTasks();
     var taskToDelete = tasks?.Find(task => task.Id == id.ToString());
     if (taskToDelete == null)
     {
@@ -92,17 +95,16 @@ public static class TaskTracker
 
     tasks?.Remove(taskToDelete);
 
-    if (tasks != null) UpdateFile(tasks);
+    if (tasks != null) _taskRepositoryResource.SaveAll(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
     Console.Write("you removed task: ");
     Console.WriteLine(taskToDelete.Id);
   }
 
-  public static void MarkInProgress(int id)
+  public void MarkInProgress(int id)
   {
-    var tasks = GetTasks();
-    if (tasks == null) return;
+    var tasks = _taskRepositoryResource.GetAllTasks();
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
 
@@ -123,14 +125,13 @@ public static class TaskTracker
     taskToUpdate.Status = Status.InProgress;
     taskToUpdate.UpdatedAt = DateTime.Now;
 
-    UpdateFile(tasks);
+    _taskRepositoryResource.SaveAll(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
   }
 
-  public static void MarkDone(int id)
+  public void MarkDone(int id)
   {
-    var tasks = GetTasks();
-    if (tasks == null) return;
+    var tasks = _taskRepositoryResource.GetAllTasks();
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
     if (taskToUpdate?.Status == Status.Done)
@@ -152,18 +153,17 @@ public static class TaskTracker
     taskToUpdate.Status = Status.Done;
     taskToUpdate.UpdatedAt = DateTime.Now;
 
-    UpdateFile(tasks);
+    _taskRepositoryResource.SaveAll(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
   }
 
-  public static void List(string[] arguments)
+  public void List(string? statusFilter)
   {
-    var tasks = GetTasks();
-    if (tasks == null) return;
+    var tasks = _taskRepositoryResource.GetAllTasks();
 
-    if (arguments.Length > 2)
+    if (statusFilter != null)
     {
-      var status = StatusToEnumMapper(arguments[2]);
+      var status = StatusToEnumMapper(statusFilter);
       ListByStatus(status, tasks);
       return;
     }
@@ -224,12 +224,4 @@ public static class TaskTracker
         return Status.Unknown;
     }
   }
-
-  private static void UpdateFile(List<Task> tasks)
-  {
-    var options = new JsonSerializerOptions { WriteIndented = true };
-    File.WriteAllText(PathToFile, JsonSerializer.Serialize(tasks, options));
-  }
-
-  private static List<Task>? GetTasks() => JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(PathToFile));
 }
