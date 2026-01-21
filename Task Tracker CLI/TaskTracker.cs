@@ -1,17 +1,14 @@
+using Task_Tracker_CLI.Engines;
 using Task_Tracker_CLI.Resources;
 
 namespace Task_Tracker_CLI;
 
-public class TaskTracker
+public class TaskTracker(
+  ITaskRepositoryResource taskRepositoryResource,
+  ITaskEngine taskEngine
+)
 {
-  private ITaskRepositoryResource _taskRepositoryResource;
-
-  public TaskTracker(ITaskRepositoryResource taskRepositoryResource)
-  {
-    this._taskRepositoryResource = taskRepositoryResource;
-  }
-
-  public bool HasTasks() => _taskRepositoryResource.StorageExists();
+  public bool HasTasks() => taskRepositoryResource.StorageExists();
 
   public void AddTask(string description)
   {
@@ -29,38 +26,29 @@ public class TaskTracker
       Status = Status.Todo,
     };
 
-    if (!_taskRepositoryResource.StorageExists())
+    if (!taskRepositoryResource.StorageExists())
     {
       List<Task> tasks = [task];
-      _taskRepositoryResource.SaveAll(tasks);
+      taskRepositoryResource.SaveAll(tasks);
 
       Errors.PrintAddInfo(task.Id, description);
       return;
     }
 
+    var readTasks = taskRepositoryResource.GetAllTasks();
+    var newId = taskEngine.GenerateNextId(readTasks);
 
-    var readTasks = _taskRepositoryResource.GetAllTasks();
-
-    List<int> ids = [];
-
-    foreach (var readTask in readTasks)
-    {
-      ids.Add(int.Parse(readTask.Id));
-    }
-
-    ids.Sort();
-    var newId = (ids.LastOrDefault() + 1).ToString();
     task.Id = newId;
     readTasks.Add(task);
 
-    _taskRepositoryResource.SaveAll(readTasks);
+    taskRepositoryResource.SaveAll(readTasks);
 
     Errors.PrintAddInfo(newId, description);
   }
 
   public void UpdateTask(int id, string description)
   {
-    var tasks = _taskRepositoryResource.GetAllTasks();
+    var tasks = taskRepositoryResource.GetAllTasks();
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
     if (taskToUpdate == null)
@@ -73,7 +61,7 @@ public class TaskTracker
 
     taskToUpdate.Description = description;
     taskToUpdate.UpdatedAt = DateTime.Now;
-    _taskRepositoryResource.SaveAll(tasks);
+    taskRepositoryResource.SaveAll(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("updated");
@@ -83,8 +71,8 @@ public class TaskTracker
 
   public void DeleteTask(int id)
   {
-    var tasks = _taskRepositoryResource.GetAllTasks();
-    var taskToDelete = tasks?.Find(task => task.Id == id.ToString());
+    var tasks = taskRepositoryResource.GetAllTasks();
+    var taskToDelete = tasks.Find(task => task.Id == id.ToString());
     if (taskToDelete == null)
     {
       Console.Write($"there is no task with id ");
@@ -93,9 +81,8 @@ public class TaskTracker
       return;
     }
 
-    tasks?.Remove(taskToDelete);
-
-    if (tasks != null) _taskRepositoryResource.SaveAll(tasks);
+    tasks.Remove(taskToDelete);
+    taskRepositoryResource.SaveAll(tasks);
 
     Console.ForegroundColor = ConsoleColor.Green;
     Console.Write("you removed task: ");
@@ -104,7 +91,7 @@ public class TaskTracker
 
   public void MarkInProgress(int id)
   {
-    var tasks = _taskRepositoryResource.GetAllTasks();
+    var tasks = taskRepositoryResource.GetAllTasks();
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
 
@@ -125,13 +112,13 @@ public class TaskTracker
     taskToUpdate.Status = Status.InProgress;
     taskToUpdate.UpdatedAt = DateTime.Now;
 
-    _taskRepositoryResource.SaveAll(tasks);
+    taskRepositoryResource.SaveAll(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
   }
 
   public void MarkDone(int id)
   {
-    var tasks = _taskRepositoryResource.GetAllTasks();
+    var tasks = taskRepositoryResource.GetAllTasks();
 
     var taskToUpdate = tasks.FirstOrDefault(task => task.Id == id.ToString());
     if (taskToUpdate?.Status == Status.Done)
@@ -153,18 +140,31 @@ public class TaskTracker
     taskToUpdate.Status = Status.Done;
     taskToUpdate.UpdatedAt = DateTime.Now;
 
-    _taskRepositoryResource.SaveAll(tasks);
+    taskRepositoryResource.SaveAll(tasks);
     Errors.PrintTaskInfo(taskToUpdate);
   }
 
   public void List(string? statusFilter)
   {
-    var tasks = _taskRepositoryResource.GetAllTasks();
+    var tasks = taskRepositoryResource.GetAllTasks();
 
     if (statusFilter != null)
     {
       var status = StatusToEnumMapper(statusFilter);
-      ListByStatus(status, tasks);
+      var filteredTasks = taskEngine.FilterByStatus(tasks, status);
+
+      if (filteredTasks.Count == 0)
+      {
+        Console.WriteLine($"you don't have anything {status}");
+        return;
+      }
+
+      foreach (var task in filteredTasks)
+      {
+        Errors.PrintTaskInfo(task);
+        Console.WriteLine();
+      }
+
       return;
     }
 
@@ -175,37 +175,9 @@ public class TaskTracker
     }
   }
 
-  private static void ListByStatus(Status status, List<Task> tasks)
-  {
-    List<Task> filteredTasks = [];
-    switch (status)
-    {
-      case Status.InProgress:
-        filteredTasks = tasks.FindAll(task => task.Status == Status.InProgress);
-        break;
-      case Status.Done:
-        filteredTasks = tasks.FindAll(task => task.Status == Status.Done);
-        break;
-      case Status.Todo:
-        filteredTasks = tasks.FindAll(task => task.Status == Status.Todo);
-        break;
-      case Status.Unknown:
-        Console.WriteLine("incorrect status");
-        return;
-    }
-
-    if (filteredTasks.Count == 0)
-    {
-      Console.WriteLine($"you don't have anything {status}");
-      return;
-    }
-
-    foreach (var task in filteredTasks)
-    {
-      Errors.PrintTaskInfo(task);
-      Console.WriteLine();
-    }
-  }
+  // private static void ListByStatus(Status status, List<Task> tasks)
+  // {
+  // }
 
   private static Status StatusToEnumMapper(string status)
   {

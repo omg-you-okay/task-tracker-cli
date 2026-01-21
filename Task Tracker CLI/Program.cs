@@ -1,4 +1,5 @@
 using Task_Tracker_CLI;
+using Task_Tracker_CLI.Engines;
 using Task_Tracker_CLI.Resources;
 
 var arguments = Environment.GetCommandLineArgs();
@@ -12,7 +13,8 @@ if (arguments.Length < 2)
 var command = arguments[1];
 
 var taskRepository = new TaskRepositoryResource(Path.Join(Directory.GetCurrentDirectory(), "tasks.json"));
-var taskTracker = new TaskTracker(taskRepository);
+var taskEngine = new TaskEngine();
+var taskTracker = new TaskTracker(taskRepository, taskEngine);
 
 
 switch (command)
