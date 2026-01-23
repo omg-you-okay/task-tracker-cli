@@ -18,25 +18,8 @@ public class TaskEngine : ITaskEngine
 
   public List<Task> FilterByStatus(List<Task> tasks, Status status)
   {
-    List<Task> filteredTasks = [];
+    if (status == Status.Unknown) return [];
 
-    switch (status)
-    {
-      case Status.InProgress:
-        filteredTasks = tasks.FindAll(task => task.Status == Status.InProgress);
-        break;
-      case Status.Done:
-        filteredTasks = tasks.FindAll(task => task.Status == Status.Done);
-        break;
-      case Status.Todo:
-        filteredTasks = tasks.FindAll(task => task.Status == Status.Todo);
-        break;
-      case Status.Unknown:
-        Console.WriteLine("incorrect status");
-        return [];
-    }
-
-
-    return filteredTasks;
+    return tasks.FindAll(task => task.Status == status);
   }
 }

@@ -80,4 +80,20 @@ public static class Errors
     Console.WriteLine(task?.Description);
     Console.ResetColor();
   }
+
+  public static void TaskNotFound(string id)
+  {
+    Console.Write($"there is no task with id ");
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine(id);
+  }
+
+  public static void PrintList(List<Task> tasks)
+  {
+    foreach (var tsk in tasks)
+    {
+      PrintTaskInfo(tsk);
+      Console.WriteLine();
+    }
+  }
 }
