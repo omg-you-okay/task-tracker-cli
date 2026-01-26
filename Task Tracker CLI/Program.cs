@@ -7,7 +7,7 @@ var arguments = Environment.GetCommandLineArgs();
 
 if (arguments.Length < 2)
 {
-  Errors.ShowManual();
+  Display.ShowManual();
   return;
 }
 
@@ -45,7 +45,7 @@ switch (command)
     break;
 
   default:
-    Console.WriteLine("wrong command");
+    Display.Error("unknown command");
     break;
 }
 
@@ -55,7 +55,7 @@ void AddTask()
 {
   if (arguments.Length < 3)
   {
-    Errors.CustomError("text is missing");
+    Display.Error("text is missing");
     return;
   }
 
@@ -64,10 +64,10 @@ void AddTask()
   switch (addResult.operationResult)
   {
     case OperationResult.Success:
-      Errors.PrintAddInfo(addResult.task!.Id, addResult.task!.Description);
+      Display.TaskCreated(addResult.task!.Id, addResult.task!.Description);
       break;
     case OperationResult.EmptyDescription:
-      Console.WriteLine("task description can't be empty");
+      Display.Error("task description can't be empty");
       break;
   }
 }
@@ -76,23 +76,23 @@ void UpdateTask()
 {
   if (!taskManager.HasTasks())
   {
-    Console.WriteLine("Add at leat 1 task");
+    Display.NoTasksFound();
     return;
   }
 
   switch (arguments.Length)
   {
     case < 3:
-      Errors.NoId();
+      Display.Error("id is missing");
       return;
     case < 4:
-      Errors.CustomError("text is missing");
+      Display.Error("text is missing");
       return;
   }
 
   if (!int.TryParse(arguments[2], out var id))
   {
-    Errors.CustomError("id must be a number");
+    Display.Error("id must be a number");
     return;
   }
 
@@ -101,10 +101,10 @@ void UpdateTask()
   switch (operationResult)
   {
     case OperationResult.NotFound:
-      Errors.TaskNotFound(arguments[2]);
+      Display.Error($"No task with id #{arguments[2]}");
       break;
     case OperationResult.Success:
-      Errors.PrintTaskInfo(task!);
+      Display.TaskUpdated(id.ToString());
       break;
   }
 }
@@ -113,19 +113,19 @@ void DeleteTask()
 {
   if (!taskManager.HasTasks())
   {
-    Console.WriteLine("Add at leat 1 task");
+    Display.NoTasksFound();
     return;
   }
 
   if (arguments.Length < 3)
   {
-    Errors.NoId();
+    Display.Error("id is missing");
     return;
   }
 
   if (!int.TryParse(arguments[2], out var id))
   {
-    Errors.CustomError("id must be a number");
+    Display.Error("id must be a number");
     return;
   }
 
@@ -134,10 +134,10 @@ void DeleteTask()
   switch (deleteResult.operationResult)
   {
     case OperationResult.NotFound:
-      Errors.TaskNotFound(arguments[2]);
+      Display.Error($"No task with id #{arguments[2]}");
       break;
     case OperationResult.Success:
-      Errors.CustomError($"you removed task: {deleteResult.task!.Id}");
+      Display.TaskDeleted(id.ToString());
       break;
   }
 }
@@ -146,19 +146,19 @@ void MarkInProgress()
 {
   if (!taskManager.HasTasks())
   {
-    Console.WriteLine("Add at leat 1 task");
+    Display.NoTasksFound();
     return;
   }
 
   if (arguments.Length < 3)
   {
-    Errors.NoId();
+    Display.Error("id is missing");
     return;
   }
 
   if (!int.TryParse(arguments[2], out var id))
   {
-    Errors.CustomError("id must be a number");
+    Display.Error("id must be a number");
     return;
   }
 
@@ -167,13 +167,13 @@ void MarkInProgress()
   switch (markInProgressResult.operationResult)
   {
     case OperationResult.NotFound:
-      Errors.TaskNotFound(arguments[2]);
+      Display.Error($"No task with id #{arguments[2]}");
       break;
     case OperationResult.AlreadyInProgress:
-      Errors.CustomError("already in progress");
+      Display.Error("already in progress");
       break;
     case OperationResult.Success:
-      Errors.PrintTaskInfo(markInProgressResult.task!);
+      Display.TaskMarkedInProgress(id.ToString());
       break;
   }
 }
@@ -182,19 +182,19 @@ void MarkDone()
 {
   if (!taskManager.HasTasks())
   {
-    Console.WriteLine("Add at leat 1 task");
+    Display.NoTasksFound();
     return;
   }
 
   if (arguments.Length < 3)
   {
-    Errors.NoId();
+    Display.Error("id is missing");
     return;
   }
   
   if (!int.TryParse(arguments[2], out var id))
   {
-    Errors.CustomError("id must be a number");
+    Display.Error("id must be a number");
     return;
   }
 
@@ -202,13 +202,13 @@ void MarkDone()
   switch (markDoneResult.operationResult)
   {
     case OperationResult.NotFound:
-      Errors.TaskNotFound(arguments[2]);
+      Display.Error($"No task with id #{arguments[2]}");
       break;
     case OperationResult.AlreadyDone:
-      Errors.CustomError("already done");
+      Display.Error("already done");
       break;
     case OperationResult.Success:
-      Errors.PrintTaskInfo(markDoneResult.task!);
+      Display.TaskMarkedDone(id.ToString());
       break;
   }
 }
@@ -217,7 +217,7 @@ void ListTasks()
 {
   if (!taskManager.HasTasks())
   {
-    Console.WriteLine("Add at leat 1 task");
+    Display.NoTasksFound();
     return;
   }
 
@@ -228,7 +228,7 @@ void ListTasks()
     status = ParseStatus(arguments[2]);
     if (status == null)
     {
-      Console.WriteLine($"invalid {arguments[2]}");
+      Display.Error($"invalid status: {arguments[2]}");
       return;
     }
   }
@@ -237,11 +237,12 @@ void ListTasks()
 
   if (tasks.Count == 0)
   {
-    Console.WriteLine($"you don't have anything {status}");
+    Display.NoTasksFound(arguments[2]);
     return;
   }
 
-  Errors.PrintList(tasks);
+  Display.PrintTaskList(tasks);
+  
 }
 
 Status? ParseStatus(string input)
